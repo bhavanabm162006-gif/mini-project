@@ -454,3 +454,382 @@ plt.savefig("output/peak_demand_analysis.png")
 plt.show()
 
 print("\nPeak Demand Analysis Completed!")
+# =====================================================
+# STEP 15: RANDOM FOREST REGRESSION
+# =====================================================
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score
+)
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+print("\nRANDOM FOREST REGRESSION ANALYSIS")
+
+# STEP 1: Select input and output variables
+
+X = df[
+    ["state_generation", "current_frequency"]
+]
+
+y = df["state_demand"]
+
+# STEP 2: Split dataset
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)
+
+# STEP 3: Create Random Forest model
+
+rf_model = RandomForestRegressor(
+    n_estimators=100,
+    max_depth=None,
+    random_state=42,
+    n_jobs=-1
+)
+
+# STEP 4: Train model
+
+rf_model.fit(X_train, y_train)
+
+print("\nRandom Forest Model Training Completed!")
+
+# STEP 5: Predict electricity demand
+
+rf_predictions = rf_model.predict(X_test)
+
+# STEP 6: Model evaluation
+
+mae = mean_absolute_error(
+    y_test, rf_predictions
+)
+
+mse = mean_squared_error(
+    y_test, rf_predictions
+)
+
+rmse = np.sqrt(mse)
+
+r2 = r2_score(
+    y_test, rf_predictions
+)
+
+print("\nRANDOM FOREST MODEL PERFORMANCE")
+
+print("Mean Absolute Error:", mae)
+print("Mean Squared Error:", mse)
+print("Root Mean Squared Error:", rmse)
+print("R2 Score:", r2)
+
+# STEP 7: Save prediction results
+
+rf_results = pd.DataFrame({
+    "Actual Demand": y_test.values,
+    "Predicted Demand": rf_predictions
+})
+
+rf_results.to_csv(
+    "output/random_forest_predictions.csv",
+    index=False
+)
+
+# STEP 8: Actual vs Predicted Graph
+
+plt.figure(figsize=(12, 5))
+
+plt.plot(
+    y_test.values[:100],
+    label="Actual Demand"
+)
+
+plt.plot(
+    rf_predictions[:100],
+    label="Predicted Demand"
+)
+
+plt.title("Random Forest Regression - Electricity Demand")
+
+plt.xlabel("Test Samples")
+plt.ylabel("Electricity Demand")
+
+plt.legend()
+plt.tight_layout()
+
+plt.savefig(
+    "output/random_forest_regression.png"
+)
+
+plt.show()
+
+# STEP 9: Feature Importance
+
+importance = pd.DataFrame({
+    "Feature": X.columns,
+    "Importance": rf_model.feature_importances_
+})
+
+print("\nFEATURE IMPORTANCE")
+print(importance)
+
+importance.to_csv(
+    "output/random_forest_feature_importance.csv",
+    index=False
+)
+
+plt.figure(figsize=(8, 5))
+
+plt.bar(
+    importance["Feature"],
+    importance["Importance"]
+)
+
+plt.title("Random Forest Feature Importance")
+plt.xlabel("Features")
+plt.ylabel("Importance")
+
+plt.tight_layout()
+
+plt.savefig(
+    "output/random_forest_feature_importance.png"
+)
+
+plt.show()
+
+print("\nRANDOM FOREST REGRESSION COMPLETED!")
+
+# =====================================================
+# STEP 14: LINEAR REGRESSION VS RANDOM FOREST COMPARISON
+# =====================================================
+
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
+
+print("\n======================================")
+print("LINEAR REGRESSION VS RANDOM FOREST")
+print("======================================")
+
+# Select input features
+X = df[[
+    "state_generation",
+    "current_frequency"
+]]
+
+# Select target variable
+y = df["state_demand"]
+
+# Remove missing values
+model_data = pd.concat([X, y], axis=1).dropna()
+
+X = model_data[[
+    "state_generation",
+    "current_frequency"
+]]
+
+y = model_data["state_demand"]
+
+# Split data chronologically (80% training, 20% testing)
+split_index = int(len(X) * 0.80)
+
+X_train = X.iloc[:split_index]
+X_test = X.iloc[split_index:]
+
+y_train = y.iloc[:split_index]
+y_test = y.iloc[split_index:]
+
+# =====================================================
+# LINEAR REGRESSION MODEL
+# =====================================================
+
+linear_model = LinearRegression()
+
+linear_model.fit(X_train, y_train)
+
+linear_predictions = linear_model.predict(X_test)
+
+# =====================================================
+# RANDOM FOREST REGRESSION MODEL
+# =====================================================
+
+rf_model = RandomForestRegressor(
+    n_estimators=200,
+    random_state=42
+)
+
+rf_model.fit(X_train, y_train)
+
+rf_predictions = rf_model.predict(X_test)
+
+# =====================================================
+# MODEL PERFORMANCE COMPARISON
+# =====================================================
+
+linear_mae = mean_absolute_error(
+    y_test, linear_predictions
+)
+
+linear_mse = mean_squared_error(
+    y_test, linear_predictions
+)
+
+linear_rmse = np.sqrt(linear_mse)
+
+linear_r2 = r2_score(
+    y_test, linear_predictions
+)
+
+rf_mae = mean_absolute_error(
+    y_test, rf_predictions
+)
+
+rf_mse = mean_squared_error(
+    y_test, rf_predictions
+)
+
+rf_rmse = np.sqrt(rf_mse)
+
+rf_r2 = r2_score(
+    y_test, rf_predictions
+)
+
+print("\nLINEAR REGRESSION RESULTS")
+
+print("MAE:", linear_mae)
+print("MSE:", linear_mse)
+print("RMSE:", linear_rmse)
+print("R2 Score:", linear_r2)
+
+print("\nRANDOM FOREST REGRESSION RESULTS")
+
+print("MAE:", rf_mae)
+print("MSE:", rf_mse)
+print("RMSE:", rf_rmse)
+print("R2 Score:", rf_r2)
+
+# =====================================================
+# SAVE MODEL COMPARISON RESULTS
+# =====================================================
+
+comparison = pd.DataFrame({
+    "Model": [
+        "Linear Regression",
+        "Random Forest Regression"
+    ],
+    "MAE": [
+        linear_mae,
+        rf_mae
+    ],
+    "MSE": [
+        linear_mse,
+        rf_mse
+    ],
+    "RMSE": [
+        linear_rmse,
+        rf_rmse
+    ],
+    "R2 Score": [
+        linear_r2,
+        rf_r2
+    ]
+})
+
+comparison.to_csv(
+    "output/model_comparison.csv",
+    index=False
+)
+
+print("\nMODEL COMPARISON TABLE")
+
+print(comparison)
+
+# =====================================================
+# STEP 15: ACTUAL VS PREDICTED GRAPH
+# =====================================================
+
+plt.figure(figsize=(12, 6))
+
+plt.plot(
+    range(len(y_test)),
+    y_test.values,
+    label="Actual Demand"
+)
+
+plt.plot(
+    range(len(y_test)),
+    linear_predictions,
+    label="Linear Regression"
+)
+
+plt.plot(
+    range(len(y_test)),
+    rf_predictions,
+    label="Random Forest Regression"
+)
+
+plt.title("Actual vs Predicted Electricity Demand")
+
+plt.xlabel("Test Data Records")
+plt.ylabel("Electricity Demand")
+
+plt.legend()
+
+plt.tight_layout()
+
+plt.savefig(
+    "output/model_actual_vs_predicted.png"
+)
+
+plt.show()
+
+# =====================================================
+# STEP 16: MODEL PERFORMANCE COMPARISON GRAPH
+# =====================================================
+
+plt.figure(figsize=(9, 5))
+
+plt.bar(
+    comparison["Model"],
+    comparison["R2 Score"]
+)
+
+plt.title("Linear Regression vs Random Forest R2 Score")
+
+plt.xlabel("Machine Learning Models")
+plt.ylabel("R2 Score")
+
+plt.tight_layout()
+
+plt.savefig(
+    "output/model_r2_comparison.png"
+)
+
+plt.show()
+
+# =====================================================
+# FINAL MODEL COMPARISON
+# =====================================================
+
+print("\n======================================")
+print("MODEL COMPARISON COMPLETED")
+print("======================================")
+
+if rf_r2 > linear_r2:
+    print("Random Forest Regression performed better.")
+elif linear_r2 > rf_r2:
+    print("Linear Regression performed better.")
+else:
+    print("Both models achieved the same R2 score.")
+
+print("\nComparison files saved successfully!")
+
